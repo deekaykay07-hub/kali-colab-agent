@@ -29,7 +29,7 @@ time.sleep(8)
 print("Ollama server started")
 
 # Cell 3: Pull a strong coding model
-# qwen2.5-coder:7b is an excellent balance for T4 (16GB VRAM)
+# qwen2.5-coder:7b is currently the best balance for T4 (excellent coding + tool use)
 MODEL = "qwen2.5-coder:7b"
 
 print(f"Pulling {MODEL}...")
@@ -53,15 +53,19 @@ When the user gives you a complex task, first think step-by-step and create a cl
 
 print("System prompt ready")
 
-# Cell 5: Start ngrok tunnel
-# BEST PRACTICE: Go to Colab Secrets (left sidebar key icon) and add:
-# Name: NGROK_TOKEN
-# Value: your_actual_ngrok_authtoken
+# Cell 5: Start ngrok tunnel (SECURE METHOD - Use Colab Secrets)
+# BEST PRACTICE:
+# 1. In Colab, click the key icon on the left sidebar (Secrets)
+# 2. Add a new secret with:
+#    Name: NGROK_TOKEN
+#    Value: (paste your ngrok authtoken here)
 
 try:
     from google.colab import userdata
     NGROK_TOKEN = userdata.get('NGROK_TOKEN')
-except:
+    print("Using ngrok token from Colab Secrets")
+except Exception:
+    print("Colab Secret 'NGROK_TOKEN' not found.")
     NGROK_TOKEN = input("Paste your ngrok authtoken here: ").strip()
 
 from pyngrok import ngrok
