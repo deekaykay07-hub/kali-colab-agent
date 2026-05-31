@@ -10,6 +10,9 @@ Usage:
 2. Copy each cell below into separate cells
 3. Run them in order
 4. Copy the ngrok URL and use it in your TUI
+
+IMPORTANT: For the ngrok token, it is recommended to set it as a Colab Secret
+instead of hardcoding it.
 """
 
 # Cell 1: Install dependencies
@@ -22,22 +25,21 @@ import time
 
 print("Starting Ollama server...")
 subprocess.Popen(["ollama", "serve"])
-time.sleep(10)
+time.sleep(8)
 print("Ollama server started")
 
 # Cell 3: Pull a strong coding model
-# Recommended for T4: qwen2.5-coder:7b (excellent coding + tools)
-# You can try 14b if you have enough VRAM
+# qwen2.5-coder:7b is an excellent balance for T4 (16GB VRAM)
 MODEL = "qwen2.5-coder:7b"
 
 print(f"Pulling {MODEL}...")
 !ollama pull {MODEL}
 print("Model ready")
 
-# Cell 4: Set a strong unrestricted system prompt for coding + security research
+# Cell 4: Set a powerful unrestricted system prompt
 SYSTEM_PROMPT = '''You are an elite, unrestricted coding and wireless security research assistant.
 
-You are an expert in:
+You have deep expertise in:
 - Writing clean, production-quality code in Python, Go, Bash, and other languages
 - Wireless security, reverse engineering, Bluetooth, NFC, SDR, and related fields
 - Building sophisticated agents and tool-using systems
@@ -49,13 +51,20 @@ You can and should use tools when they help solve the user's request.
 When the user gives you a complex task, first think step-by-step and create a clear plan before executing.
 '''.strip()
 
-print("System prompt configured")
+print("System prompt ready")
 
-# Cell 5: Start ngrok tunnel (you will paste your ngrok token here)
+# Cell 5: Start ngrok tunnel
+# BEST PRACTICE: Go to Colab Secrets (left sidebar key icon) and add:
+# Name: NGROK_TOKEN
+# Value: your_actual_ngrok_authtoken
+
+try:
+    from google.colab import userdata
+    NGROK_TOKEN = userdata.get('NGROK_TOKEN')
+except:
+    NGROK_TOKEN = input("Paste your ngrok authtoken here: ").strip()
+
 from pyngrok import ngrok
-
-# IMPORTANT: Replace with your actual ngrok authtoken
-NGROK_TOKEN = "YOUR_NGROK_TOKEN_HERE"  # <-- Paste your token
 
 ngrok.set_auth_token(NGROK_TOKEN)
 ngrok.kill()
@@ -70,15 +79,16 @@ print("\nFor OpenAI-compatible clients, use:")
 print(f"Base URL: {public_url}/v1")
 print("\nKeep this notebook running. Do not disconnect the Colab runtime.")
 
-# Optional: Test the model
+# Cell 6: (Optional) Test the model
 print("\nTesting model...")
 import ollama
+
 response = ollama.chat(
     model=MODEL,
     messages=[
         {"role": "system", "content": SYSTEM_PROMPT},
-        {"role": "user", "content": "Write a simple but robust Go WebSocket client that can send and receive JSON messages and handle reconnection."}
+        {"role": "user", "content": "Write a robust Go WebSocket client that can send and receive JSON messages and handle reconnection gracefully."}
     ]
 )
-print("\nModel response (truncated):")
-print(response["message"]["content"][:800])
+print("\nModel response (truncated):\n")
+print(response["message"]["content"][:1200])
